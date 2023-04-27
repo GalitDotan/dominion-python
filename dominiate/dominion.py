@@ -1,14 +1,15 @@
-from game import *
-from players import *
-from basic_ai import *
-from combobot import *
-from cards import variable_cards
-from collections import defaultdict
 import random
+from collections import defaultdict
+
+from dominiate.basic_ai.combo_bot.combo_utils import *
+from .basic_ai.hill_climb_bot import HillClimbBot
+from .cards import variable_cards
+from .players.human_player import HumanPlayer
+
 
 def compare_bots(bots):
     scores = defaultdict(int)
-    for i in xrange(50):
+    for i in range(50):
         random.shuffle(bots)
         game = Game.setup(bots, variable_cards)
         results = game.run()
@@ -21,6 +22,7 @@ def compare_bots(bots):
                 break
     return scores
 
+
 def test_game():
     player1 = smithyComboBot
     player2 = chapelComboBot
@@ -30,14 +32,16 @@ def test_game():
     results = game.run()
     return results
 
+
 def human_game():
     player1 = smithyComboBot
     player2 = chapelComboBot
     player3 = HillClimbBot(2, 3, 40)
     player4 = HumanPlayer('You')
-    game = Game.setup([player1, player2, player3, player4], variable_cards[-10:])
+    game = Game.setup([player1, player2, player3, player4], get_rand_cards())
     return game.run()
 
-if __name__ == '__main__':
-    #print compare_bots([smithyComboBot, chapelComboBot, HillClimbBot(2, 3, 40)])
-    human_game()
+
+def get_rand_cards():
+    # TODO: choose randomly
+    return variable_cards[-10:]
