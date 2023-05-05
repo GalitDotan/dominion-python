@@ -3,10 +3,10 @@ from dominiate.decisions.decision import Decision
 
 class BuyDecision(Decision):
     def coins(self):
-        return self.state().hand_value()
+        return self.get_game_state().hand_value()
 
     def buys(self):
-        return self.state().buys
+        return self.get_game_state().buys
 
     def choices(self):
         assert self.coins() >= 0
@@ -14,8 +14,8 @@ class BuyDecision(Decision):
         return [None] + [card for card in self.game.card_choices() if card.cost <= value]
 
     def choose(self, card):
-        self.game.log.info("%s buys %s" % (self.player().name, card))
-        state = self.state()
+        self.game.log.info("%s buys %s" % (self.get_curr_player().name, card))
+        state = self.get_game_state()
         if card is None:
             newgame = self.game.change_current_state(
                 delta_buys=-state.buys

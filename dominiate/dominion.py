@@ -4,6 +4,7 @@ from collections import defaultdict
 from dominiate.basic_ai.combo_bot.combo_utils import *
 from .basic_ai.hill_climb_bot import HillClimbBot
 from .cards import variable_cards
+from .setup_game import setup
 from .players.human_player import HumanPlayer
 
 
@@ -11,7 +12,7 @@ def compare_bots(bots):
     scores = defaultdict(int)
     for i in range(50):
         random.shuffle(bots)
-        game = Game.setup(bots, variable_cards)
+        game = setup(variable_cards)
         results = game.run()
         maxscore = 0
         for bot, score in results:
@@ -28,17 +29,21 @@ def test_game():
     player2 = chapelComboBot
     player3 = HillClimbBot(2, 3, 40)
     player2.setLogLevel(logging.DEBUG)
-    game = Game.setup([player1, player2, player3], variable_cards)
+    game = setup(variable_cards)
     results = game.run()
     return results
 
 
 def human_game():
+    """
+    Launch a 4 player game with 3 bots and a human player
+    """
     player1 = smithyComboBot
     player2 = chapelComboBot
     player3 = HillClimbBot(2, 3, 40)
     player4 = HumanPlayer('You')
-    game = Game.setup([player1, player2, player3, player4], get_rand_cards())
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+    game = setup(get_rand_cards())
     return game.run()
 
 

@@ -1,3 +1,5 @@
+from retry import retry
+
 from dominiate.game import INF
 from dominiate.decisions.multi_decision import MultiDecision
 from dominiate.players.big_money_player import BigMoney
@@ -12,7 +14,7 @@ class HumanPlayer(Player):
         if decision.game.simulated:
             # Don't ask the player to tell the AI what they'll do!
             return self.substitute_ai().make_decision(decision)
-        state = decision.game.state()
+        state = decision.game.get_game_state()
         print(state.hand)
         print("Deck: %d cards" % state.deck_size())
         print("VP: %d" % state.score())
@@ -23,16 +25,14 @@ class HumanPlayer(Player):
             chosen = self.make_single_decision(decision)
         return decision.choose(chosen)
 
+    @retry(exceptions=(ValueError, IndexError), tries=5)
     def make_single_decision(self, decision):
-        for index, choice in enumerate(decision.choices()):
+        choices = decision.choices()
+        for index, choice in enumerate(choices):
             print("\t[%d] %s" % (index, choice))
-        choice = input('Your choice: ')
-        try:
-            return decision.choices()[int(choice)]
-        except (ValueError, IndexError):
-            # Try again
-            print("That's not a choice.")
-            return self.make_single_decision(decision)
+        choice_index = int(input('Your choice: '))
+        print(f"You chose {choice_index}")
+        return choices[choice_index]
 
     def make_multi_decision(self, decision):
         for index, choice in enumerate(decision.choices()):

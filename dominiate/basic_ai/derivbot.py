@@ -40,8 +40,8 @@ class DerivBot(HillClimbBot):
         for deriv in (1, 2):
             prev_order = sorted(list(self.values[deriv-1].items()), key=lambda x: -x[1])
             for iter in range(self.k):
-                game = Game([game.state().simulation_state()],
-                             game.card_counts, 0, simulated=True)
+                game = Game([game.curr_player_state().simulation_state()],
+                            game.card_counts, 0, simulated=True)
                 state = game.simulate_partial_turn()
                 hand = state.tableau + state.hand
                 
@@ -72,12 +72,12 @@ class DerivBot(HillClimbBot):
         print("Estimated turns left:", turns_left_in_game)
 
         # reshuffles = (cards/turn) / (cards/deck) * turns_left
-        reshuffles_left = (avg_hand_size / len(game.state().all_cards()) *
-          turns_left_in_game)
+        reshuffles_left = (avg_hand_size / len(game.curr_player_state().all_cards()) *
+                           turns_left_in_game)
 
         # compensate for cards in deck
         reshuffles_left -= \
-          float(len(game.state().drawpile)) / game.state().deck_size()
+            float(len(game.curr_player_state().drawpile)) / game.curr_player_state().deck_size()
         
         factors = [1.0, 0.0, 0.0]
         factors[1] = max(reshuffles_left, 0)
@@ -116,9 +116,9 @@ class DerivBot(HillClimbBot):
     
     def make_buy_decision(self, decision):
         print("BuyDecision (%d coins): hand is %s" % (
-          decision.state().hand_value(), decision.state().hand
+            decision.get_game_state().hand_value(), decision.get_game_state().hand
         ))
-        print("Deck is now:", sorted(decision.game.state().all_cards()))
+        print("Deck is now:", sorted(decision.game.get_game_state().all_cards()))
         choices = decision.choices()
         choices.sort(key=lambda x: self.buy_priority(decision, x))
         return choices[-1]

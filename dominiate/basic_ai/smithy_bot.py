@@ -13,7 +13,7 @@ class SmithyBot(BigMoney):
         return list(state.all_cards()).count(c.smithy)
 
     def buy_priority_order(self, decision):
-        state = decision.state()
+        state = decision.get_game_state()
         provinces_left = decision.game.card_counts[c.province]
         if provinces_left <= self.cutoff1:
             order = [None, c.estate, c.silver, c.duchy, c.province]

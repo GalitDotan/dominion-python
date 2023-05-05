@@ -22,8 +22,8 @@ def cellar_action(game):
     newgame = game.current_player().make_decision(
         DiscardDecision(game)
     )
-    card_diff = game.state().hand_size() - newgame.state().hand_size()
-    return newgame.replace_current_state(newgame.state().draw(card_diff))
+    card_diff = game.get_game_state().hand_size() - newgame.get_game_state().hand_size()
+    return newgame.replace_current_state(newgame.get_game_state().draw(card_diff))
 
 
 def warehouse_action(game):

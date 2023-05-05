@@ -1,7 +1,8 @@
 import random
 import logging
+from copy import deepcopy
 
-from dominiate.base_cards import estate, duchy, province, copper, silver, gold, VICTORY_CARDS
+from dominiate.base_cards import estate, duchy, province, copper, silver, gold
 from dominiate.decisions.act_decision import ActDecision
 from dominiate.decisions.buy_decision import BuyDecision
 
@@ -13,76 +14,51 @@ INF = ()
 
 class Game(object):
     def __init__(self, playerstates, card_counts, turn=0, simulated=False):
-        self.playerstates = playerstates
+        self.player_states = playerstates
         self.card_counts = card_counts
         self.turn = turn
         self.player_turn = turn % len(playerstates)
         self.round = turn // len(playerstates)
         self.simulated = simulated
-        logid = 'Game'
-        if self.simulated:
-            logid = 'Simulation'
+        logid = 'Simulation' if self.simulated else 'Game'
         self.log = logging.getLogger(logid)
-        if self.simulated:
-            self.log.setLevel(logging.WARN)
-        else:
-            self.log.setLevel(logging.INFO)
+        self.log.setLevel(logging.WARN) if self.simulated else self.log.setLevel(logging.INFO)
 
-    def copy(self):
+    def __copy__(self):
         """Make an exact copy of this game state."""
-        return Game(self.playerstates[:], self.card_counts, self.turn,
-                    self.simulated)
+        return Game(self.player_states[:], self.card_counts, self.turn, self.simulated)
 
-    @staticmethod
-    def setup(players, var_cards=(), simulated=False):
-        """Set up the game."""
-        counts = {
-            estate: VICTORY_CARDS[len(players)],
-            duchy: VICTORY_CARDS[len(players)],
-            province: VICTORY_CARDS[len(players)],
-            copper: 60 - 7 * len(players),
-            silver: 40,
-            gold: 30
-        }
-
-        for card in var_cards:
-            counts[card] = 10
-
-        playerstates = [PlayerState.initial_state(p) for p in players]
-        random.shuffle(playerstates)
-        return Game(playerstates, counts, turn=0, simulated=simulated)
-
-    def state(self):
+    def curr_player_state(self):
         """
-        Get the game's state for the current player. Most methods that
-        do anything interesting need to do this.
+        Get the game's state for the current player.
+        Most methods that do anything interesting need to do this.
         """
-        return self.playerstates[self.player_turn]
+        return self.player_states[self.player_turn]
 
     def current_play_card(self, card):
         """
         Play a card in the current state without decrementing the action count.
         Could be useful for Throne Rooms and such.
         """
-        return self.replace_current_state(self.state().play_card(card))
+        return self.replace_current_state(self.curr_player_state().play_card(card))
 
     def current_play_action(self, card):
         """
         Remember, this is the one that decrements the action count.
         """
-        return self.replace_current_state(self.state().play_action(card))
+        return self.replace_current_state(self.curr_player_state().play_action(card))
 
     def current_draw_cards(self, n):
         """
         The current player draws n cards.
         """
-        return self.replace_current_state(self.state().draw(n))
+        return self.replace_current_state(self.curr_player_state().draw(n))
 
     def current_player(self):
-        return self.state().player
+        return self.curr_player_state().get_curr_player
 
     def num_players(self):
-        return len(self.playerstates)
+        return len(self.player_states)
 
     def card_choices(self):
         """
@@ -97,18 +73,18 @@ class Game(object):
         """
         Remove a single card from the table.
         """
-        new_counts = self.card_counts.copy()
+        new_counts = deepcopy(self.card_counts)
         new_counts[card] -= 1
         assert new_counts[card] >= 0
-        return Game(self.playerstates[:], new_counts, self.player_turn, self.simulated)
+        return Game(self.player_states[:], new_counts, self.player_turn, self.simulated)
 
     def replace_states(self, newstates):
         """
         Do something with the current player's state and make a new overall
         game state from it.
         """
-        newgame = self.copy()
-        newgame.playerstates = newstates
+        newgame = deepcopy(self)
+        newgame.player_states = newstates
         return newgame
 
     def replace_current_state(self, newstate):
@@ -116,8 +92,8 @@ class Game(object):
         Do something with the current player's state and make a new overall
         game state from it.
         """
-        newgame = self.copy()
-        newgame.playerstates[self.player_turn] = newstate
+        newgame = deepcopy(self)
+        newgame.player_states[self.player_turn] = newstate
         return newgame
 
     def change_current_state(self, **changes):
@@ -126,17 +102,17 @@ class Game(object):
         a buy or using up an action. The changes are expressed as deltas from
         the current state.
         """
-        return self.replace_current_state(self.state().change(**changes))
+        return self.replace_current_state(self.curr_player_state().change(**changes))
 
     def change_other_states(self, **changes):
         """
         Make a numerical change to the states of all non-current players, the
         same way as change_current_state.
         """
-        newgame = self.copy()
+        newgame = deepcopy(self)
         for i in range(self.num_players()):
             if i == self.player_turn: continue
-            newgame.playerstates[i] = newgame.playerstates[i].change(**changes)
+            newgame.player_states[i] = newgame.player_states[i].change(**changes)
         return newgame
 
     def transform_other_states(self, func, attack=False):
@@ -147,10 +123,10 @@ class Game(object):
         counter that requires them to make a decision. Implement attacks using
         the attack_with_decision method instead.
         """
-        newgame = self.copy()
+        newgame = deepcopy(self)
         for i in range(self.num_players()):
             if i == self.player_turn: continue
-            newgame.playerstates[i] = func(newgame.playerstates[i])
+            newgame.player_states[i] = func(newgame.player_states[i])
         return newgame
 
     def next_mini_turn(self):
@@ -161,17 +137,17 @@ class Game(object):
         This is useful when players need to make decisions in the middle of
         another player's turn, creating what we call here a "mini-turn".
         """
-        return Game(self.playerstates[:], self.card_counts, self.turn + 1,
+        return Game(self.player_states[:], self.card_counts, self.turn + 1,
                     self.simulated)
 
     def everyone_else_makes_a_decision(self, decision_template, attack=False):
         newgame = self.next_mini_turn()
         while newgame.player_turn != self.player_turn:
             if attack:
-                if newgame.state().is_defended():
+                if newgame.curr_player_state().is_defended():
                     newgame = newgame.next_mini_turn()
                     continue
-                reactions = newgame.state().get_reactions()
+                reactions = newgame.curr_player_state().get_reactions()
                 for reaction in reactions:
                     newgame = reaction(newgame)
             decision = decision_template(newgame)
@@ -189,7 +165,7 @@ class Game(object):
         Run through all the decisions the current player has to make, and
         return the resulting state.
         """
-        state = self.state()
+        state = self.curr_player_state()
         decisiontype = state.next_decision()
         if decisiontype is None: return self
         decision = decisiontype(self)
@@ -204,9 +180,9 @@ class Game(object):
         various actions.
         """
         return Game(
-            [state.simulated_from_here() if state is self.state()
+            [state.simulated_from_here() if state is self.curr_player_state()
              else state.simulate()
-             for state in self.playerstates],
+             for state in self.player_states],
             self.card_counts,
             self.turn,
             simulated=True
@@ -219,7 +195,7 @@ class Game(object):
         the BigMoney strategy.
         """
         if not self.simulated: self = self.simulated_copy()
-        state = self.state()
+        state = self.curr_player_state()
         decisiontype = state.next_decision()
         if decisiontype is None:
             assert False, "BuyDecision never happened this turn"
@@ -235,7 +211,7 @@ class Game(object):
         return the state where the player buys stuff.
         """
         if not self.simulated: self = self.simulated_copy()
-        state = self.state()
+        state = self.curr_player_state()
         decisiontype = state.next_decision()
         if decisiontype is None:
             assert False, "BuyDecision never happened this turn"
@@ -264,11 +240,11 @@ class Game(object):
 
         next_turn = (self.turn + 1)
 
-        newgame = Game(endturn.playerstates[:], endturn.card_counts,
+        newgame = Game(endturn.player_states[:], endturn.card_counts,
                        next_turn, self.simulated)
         # mutate the new game object since nobody cares yet
-        newgame.playerstates[self.player_turn] = \
-            newgame.playerstates[self.player_turn].next_turn()
+        newgame.player_states[self.player_turn] = \
+            newgame.player_states[self.player_turn].next_turn()
 
         # Run AI hooks that need to happen after the turn.
         self.current_player().after_turn(newgame)
@@ -293,13 +269,13 @@ class Game(object):
         game = self
         while not game.over():
             game = game.take_turn()
-        scores = [(state.player, state.score()) for state in game.playerstates]
+        scores = [(state.get_curr_player, state.score()) for state in game.player_states]
         self.log.info("End of game.")
         self.log.info("Scores: %s" % scores)
         return scores
 
     def __repr__(self):
-        return 'Game%s[%s]' % (str(self.playerstates), str(self.turn))
+        return 'Game%s[%s]' % (str(self.player_states), str(self.turn))
 
 
 class PlayerState(object):

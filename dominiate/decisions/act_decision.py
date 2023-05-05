@@ -3,13 +3,13 @@ from dominiate.decisions.decision import Decision
 
 class ActDecision(Decision):
     def choices(self):
-        return [None] + [card for card in self.state().hand if card.isAction()]
+        return [None] + [card for card in self.get_game_state().hand if card.isAction()]
 
     def choose(self, card):
-        self.game.log.info("%s plays %s" % (self.player().name, card))
+        self.game.log.info("%s plays %s" % (self.get_curr_player().name, card))
         if card is None:
             newgame = self.game.change_current_state(
-                delta_actions=-self.state().actions
+                delta_actions=-self.get_game_state().actions
             )
             return newgame
         else:
@@ -18,4 +18,4 @@ class ActDecision(Decision):
 
     def __str__(self):
         return "ActDecision (%d actions, %d buys, +%d coins)" % \
-            (self.state().actions, self.state().buys, self.state().coins)
+            (self.get_game_state().actions, self.get_game_state().buys, self.get_game_state().coins)

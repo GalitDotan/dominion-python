@@ -3,7 +3,7 @@ class Player(object):
         raise NotImplementedError("Player is an abstract class")
 
     def make_decision(self, decision, state):
-        assert state.player is self
+        assert state.get_curr_player is self
         raise NotImplementedError
 
     def make_multi_decision(self, decision, state):

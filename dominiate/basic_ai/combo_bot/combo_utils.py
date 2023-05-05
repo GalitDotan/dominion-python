@@ -18,6 +18,7 @@ from dominiate import cards as c
 from dominiate.basic_ai.combo_bot.combo_bot import ComboBot
 from dominiate.basic_ai.combo_bot.utils import deck_value
 from dominiate.game import Game
+from dominiate.setup_game import setup
 from dominiate.players.big_money_player import BigMoney
 
 
@@ -25,11 +26,11 @@ def big_money_baseline():
     improvements = np.zeros((30,))
     counts = np.zeros((30,), dtype='int32')
     for iteration in range(10000):
-        game = Game.setup([BigMoney(1, 2)])
+        game = setup()
         for turn in range(30):
-            before_value = deck_value(game.state().all_cards())
+            before_value = deck_value(game.get_game_state().all_cards())
             game = game.take_turn()
-            after_value = deck_value(game.state().all_cards())
+            after_value = deck_value(game.get_game_state().all_cards())
             delta = after_value - before_value
             improvements[turn] += delta
             counts[turn] += 1

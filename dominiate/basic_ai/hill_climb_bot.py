@@ -12,7 +12,7 @@ class HillClimbBot(BigMoney):
         BigMoney.__init__(self, cutoff1, cutoff2)
 
     def buy_priority(self, decision, card):
-        state = decision.state()
+        state = decision.get_game_state()
         total = 0
         if card is None:
             add = ()

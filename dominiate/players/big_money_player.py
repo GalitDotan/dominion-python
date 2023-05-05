@@ -1,4 +1,5 @@
 from dominiate import cards as c
+from dominiate.decisions.discard_decision import DiscardDecision
 from dominiate.players.ai_player import AIPlayer
 
 
@@ -71,7 +72,7 @@ class BigMoney(AIPlayer):
 
     def make_trash_decision_incremental(self, decision, choices, allow_none=True):
         "Choose a single card to trash."
-        deck = decision.state().all_cards()
+        deck = decision.get_game_state().all_cards()
         money = sum([card.treasure + card.coins for card in deck])
         if c.curse in choices:
             return c.curse
@@ -113,7 +114,7 @@ class BigMoney(AIPlayer):
         actions_sorted = [ca for ca in choices if ca.isAction()]
         actions_sorted.sort(key=lambda a: a.actions)
         plus_actions = sum([ca.actions for ca in actions_sorted])
-        wasted_actions = len(actions_sorted) - plus_actions - decision.state().actions
+        wasted_actions = len(actions_sorted) - plus_actions - decision.get_game_state().actions
         victory_cards = [ca for ca in choices if ca.isVictory() and
                          not ca.isAction() and not ca.isTreasure()]
         if wasted_actions > 0:
@@ -129,8 +130,10 @@ class BigMoney(AIPlayer):
                                     key=lambda ca: (ca.actions, ca.cards, ca.coins, ca.treasure))
             return priority_order[0]
 
-    def make_discard_decision(self, decision):
-        # TODO: make this good.
+    def make_discard_decision(self, decision: DiscardDecision):
+        """
+        Choose which cards to discard.
+        """
         # This probably involves finding all distinct sets of cards to discard,
         # of size decision.min to decision.max, and figuring out how well the
         # rest of your hand plays out (including things like the Cellar bonus).
@@ -141,16 +144,5 @@ class BigMoney(AIPlayer):
 
         latest = False
         chosen = []
-        choices = decision.choices()
-        print(choices)
-        print(decision)
-        print(decision.max)
-        while choices and latest is not None and len(chosen) < decision.max:
-            latest = self.make_discard_decision_incremental(
-                decision, choices,
-                allow_none=(len(chosen) >= decision.min)
-            )
-            if latest is not None:
-                choices.remove(latest)
-                chosen.append(latest)
-        return chosen
+        choices = decision.choices()  # all the options
+        return choices[0]  # TODO: make a smarter decision
