@@ -2,3 +2,8 @@ retry
 fastapi
 pusher
 uvicorn
+fastapi-login
+python-multipart
+sqlalchemy
+jinja2
+python-jose
