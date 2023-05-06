@@ -1,1 +1,4 @@
 retry
+fastapi
+pusher
+uvicorn

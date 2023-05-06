@@ -1,8 +1,8 @@
 import random
 from copy import deepcopy
 
-from card_lists.base.Copper import Copper
-from card_lists.base.Estate import Estate
+from card_lists.base.basic_supply_cards.Copper import Copper
+from card_lists.base.basic_supply_cards.Estate import Estate
 from game_conf.card import Card
 from game_conf.pile import Pile, generate_card_pile
 from mat.trash import Trash
@@ -42,7 +42,7 @@ class Table:
         # Players: {self.players}
         # Current player: {self.curr_player.name}
         
-        # Suply:
+        # Supply:
         {self.supply}
         #######################################################
         """
@@ -55,16 +55,20 @@ class TableConf:
     """
 
     def __init__(self, cards_level_range: tuple[int, int] = (1, 10),
-                 num_supply_range: tuple[int, int] = (10, 10), card_conf: dict[Card, int] = None):
+                 num_supply_range: tuple[int, int] = (10, 10), player_cards_conf: dict[Card, int] = None):
         self._cards_level_range = cards_level_range
         self.kingdom_cards_range: tuple[int, int] = num_supply_range
 
-        self.card_conf = card_conf
-        if card_conf is None:
-            self.card_conf = {
+        self.player_cards_conf = player_cards_conf
+        if player_cards_conf is None:
+            self.player_cards_conf = {
                 Copper: 7,
                 Estate: 3
             }
+
+        basic_supply_cards = {
+            Copper
+        }
 
     @property
     def allowed_cards(self) -> list[Card]:
@@ -91,6 +95,6 @@ class TableConf:
         Generate a list of new cards a player receives in the beginning of the game.
         """
         cards = []
-        for card_type, cnt in self.card_conf.items():
+        for card_type, cnt in self.player_cards_conf.items():
             cards.extend([card_type() for _ in range(cnt)])
         return cards
