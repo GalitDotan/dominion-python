@@ -1,5 +1,5 @@
 from hand import Hand
-from phase.phase import Phase
+from turn.phase.phase import Phase
 from player import Player
 
 

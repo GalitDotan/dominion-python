@@ -1,10 +1,8 @@
 from game_conf.card import Card
-from player import Player
 
 
 class Hand:
-    def __init__(self, player: Player, cards: list[Card], revel=False):
-        self.player = player
+    def __init__(self, cards: list[Card], revel=False):
         self.cards = cards
 
     def revel(self):

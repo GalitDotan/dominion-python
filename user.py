@@ -9,7 +9,3 @@ class User:
         self.liked_cards = []
         self.disliked_cards = []
         self.banned_cards = []
-
-    def get_player(self):
-        return Player(name=self.username,
-                      is_bot=self.is_bot)

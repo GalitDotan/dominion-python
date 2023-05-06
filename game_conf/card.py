@@ -9,25 +9,18 @@ class Card(ABC):
     A card in a game. Stats can be modified
     """
 
-    def __init__(self, name: str, cost: int, vp: int = 0, default_pile_size=10, is_reveled=False):
+    def __init__(self, name: str, cost: int, default_pile_size=10, is_reveled=False):
         self.name: str = name
         self.cost: int = cost
-        self.vp: int = vp
         self.default_pile_size = default_pile_size
         self.is_reveled = is_reveled
 
+    def __eq__(self, other):
+        return self.name == other.name
+
+    @abstractmethod
     def __repr__(self):
-        return f"""
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        ### {self.name} ###
-        
-        # Type: {self.type}
-        # Cost: {self.cost}
-        
-        {self.description}
-        
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        """
+        raise NotImplementedError()
 
     def __lt__(self, other: 'Card'):
         if self.cost < other.cost:
@@ -53,6 +46,19 @@ class Action(Card):
     def __init__(self, name: str, cost: int, commands: list[Command]):
         super().__init__(name, cost)
         self.commands: list[Command] = commands
+
+    def __repr__(self):
+        return f"""
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                ### {self.name} ###
+
+                # Type: {self.type}
+                # Cost: {self.cost}
+
+                {self.description}
+
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                """
 
     @property
     def description(self):
@@ -86,8 +92,9 @@ class Treasure(Card):
 
 
 class Curse(Card):
-    def __init__(self, vp=-1, *args, **kwargs):
-        super().__init__(vp=vp, *args, **kwargs)
+    def __init__(self, name: str = 'Curse', cost: int = 0):
+        super().__init__(name, cost)
+        self.vp = -1
 
     def __repr__(self):
         return f"""
@@ -106,7 +113,8 @@ class Curse(Card):
 class Victory(Card):
 
     def __init__(self, name, cost, vp, *args, **kwargs):
-        super().__init__(name=name, cost=cost, vp=vp, *args, **kwargs)
+        super().__init__(name=name, cost=cost, *args, **kwargs)
+        self.vp = vp
 
     def __repr__(self):
         return f"""
@@ -126,11 +134,19 @@ class Victory(Card):
 
 
 class Reaction(Card):
-    pass
+    def play(self):
+        pass
+
+    def __repr__(self):
+        pass
 
 
 class Attack(Card):
-    pass
+    def play(self):
+        pass
+
+    def __repr__(self):
+        pass
 
 
 CARD_TYPES = (Action, Treasure, Curse, Reaction, Attack)

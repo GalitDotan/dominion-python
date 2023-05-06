@@ -2,11 +2,11 @@ from tableconf import Table, TableConf
 from user import User
 
 USER = User(name='siri')
-YOU = USER.get_player()
-conf = TableConf(num_suply_range=(0, 0))
+conf = TableConf(num_supply_range=(0, 0))
 table = Table([USER], conf)
-
-print(table)
+you = table
 
 while True:
-    pass
+    print(table)
+    curr_player = table.curr_player
+    curr_player.play_turn()
